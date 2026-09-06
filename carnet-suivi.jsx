@@ -5,9 +5,86 @@ import {
 } from "recharts";
 import {
   Home, Dumbbell, Activity, Sparkles, Plus, X, Check, Trash2, ChevronRight,
-  ArrowLeft, Play, Clock, TrendingUp, TrendingDown, Flame, Settings,
-  AlertTriangle, Moon, Zap, Ruler, Smile, Minus,
+  ArrowLeft, Play, Flame, Settings,
+  AlertTriangle, Moon, Zap, Ruler, Smile, ExternalLink,
 } from "lucide-react";
+
+/* ------------------------------------------------------------------ */
+/* Illustrations d'exercices (RepDB)                                   */
+/* ------------------------------------------------------------------ */
+/* Images d'exercices : jeu de données RepDB (repdb.co), libre d'usage  */
+/* en appli sous réserve d'attribution visible — voir SettingsSheet.    */
+/* Si une image ne charge pas (site externe indisponible), on retombe   */
+/* sur un pictogramme bonhomme-bâton dessiné en local (Stickman).       */
+const REPDB_BASE = "https://exercise-dataset.com/";
+const REPDB_ATTRIBUTION_URL = "https://repdb.co";
+
+const PICTOGRAMS = {
+  stretch: {
+    head: [50, 18, 7],
+    lines: [[50, 25, 50, 55], [50, 30, 30, 12], [50, 30, 70, 12], [50, 55, 38, 85], [50, 55, 62, 85]],
+  },
+  pull: {
+    head: [50, 22, 7],
+    lines: [[50, 29, 50, 58], [50, 34, 30, 20], [50, 34, 70, 20], [50, 58, 42, 88], [50, 58, 58, 88]],
+  },
+  push: {
+    head: [24, 45, 7],
+    lines: [[30, 48, 70, 55], [38, 46, 30, 30], [55, 52, 55, 68], [70, 55, 85, 40], [70, 55, 85, 68]],
+  },
+  raise: {
+    head: [50, 20, 7],
+    lines: [[50, 27, 50, 58], [50, 33, 25, 33], [50, 33, 75, 33], [50, 58, 38, 88], [50, 58, 62, 88]],
+  },
+  squat: {
+    head: [50, 18, 7],
+    lines: [[50, 25, 50, 50], [50, 30, 32, 45], [50, 30, 68, 45], [50, 50, 32, 65], [32, 65, 38, 85], [50, 50, 68, 65], [68, 65, 62, 85]],
+  },
+  plank: {
+    head: [18, 40, 7],
+    lines: [[24, 42, 80, 55], [30, 44, 30, 60], [80, 55, 90, 40]],
+  },
+  core: {
+    head: [26, 55, 7],
+    lines: [[32, 58, 60, 42], [60, 42, 82, 42], [32, 58, 40, 85], [40, 85, 55, 85]],
+  },
+};
+
+function Stickman({ pose, size = 72, color }) {
+  const p = PICTOGRAMS[pose] || PICTOGRAMS.stretch;
+  const stroke = color || COLORS.signal;
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100" aria-hidden="true" style={{ display: "block" }}>
+      <circle cx={p.head[0]} cy={p.head[1]} r={p.head[2]} fill="none" stroke={stroke} strokeWidth={4} />
+      {p.lines.map((l, i) => (
+        <line key={i} x1={l[0]} y1={l[1]} x2={l[2]} y2={l[3]} stroke={stroke} strokeWidth={4} strokeLinecap="round" />
+      ))}
+    </svg>
+  );
+}
+
+function ExerciseVisual({ exercise, size = 72 }) {
+  const [failed, setFailed] = useState(false);
+  if (!exercise.image || failed) {
+    return (
+      <div className="flex-shrink-0 rounded-xl flex items-center justify-center" style={{ width: size, height: size, background: "rgba(255,255,255,0.05)" }}>
+        <Stickman pose={exercise.pictogram} size={size * 0.8} />
+      </div>
+    );
+  }
+  return (
+    <img
+      src={`${REPDB_BASE}${exercise.image}`}
+      alt={exercise.name}
+      width={size}
+      height={size}
+      loading="lazy"
+      onError={() => setFailed(true)}
+      className="flex-shrink-0 rounded-xl"
+      style={{ width: size, height: size, objectFit: "cover", background: "rgba(255,255,255,0.05)" }}
+    />
+  );
+}
 
 /* ------------------------------------------------------------------ */
 /* Tokens                                                              */
@@ -55,26 +132,29 @@ const WORKOUTS = {
     focus: "Dos, épaules, largeur",
     tagline: "Construire la largeur du dos, stabiliser les épaules.",
     exercises: [
-      { name: "Rowing élastique", sets: 3, target: "12 répétitions", note: "Dos neutre, tire les coudes vers l'arrière sans cambrer." },
-      { name: "Tirage vertical", sets: 3, target: "12 répétitions", note: "Charge légère, contrôle la descente." },
-      { name: "Élévations latérales", sets: 3, target: "15 répétitions", note: "Charge très légère, amplitude courte si besoin." },
-      { name: "Extension dorsale douce", sets: 2, target: "10 répétitions", note: "Mouvement lent, aucun à-coup sur le buste." },
-      { name: "Gainage dos droit", sets: 3, target: "20 secondes", note: "Debout ou à genoux — évite la planche ventrale si la cicatrice tire." },
-      { name: "Respiration et étirement", sets: 1, target: "60 secondes", note: "Termine en douceur, respiration profonde." },
+      { name: "Échauffement", sets: 1, target: "90 secondes", note: "Mobilité épaules et dos, monte progressivement en intensité.", pictogram: "stretch" },
+      { name: "Tractions assistées", sets: 3, target: "6 répétitions", note: "Utilise l'assistance nécessaire pour contrôler la descente, dos gainé sans cambrer.", pictogram: "pull", image: "images/flat/assisted-pull-ups-peak.webp" },
+      { name: "Rows australiens", sets: 3, target: "10 répétitions", note: "Corps aligné des pieds à la tête, tire la poitrine vers la barre sans creuser le bas du dos.", pictogram: "pull", image: "images/flat/inverted-row-peak.webp" },
+      { name: "Élévations latérales", sets: 3, target: "15 répétitions", note: "Charge très légère (1 à 2 kg), mouvement contrôlé, sans élan.", pictogram: "raise", image: "images/flat/lateral-raise-peak.webp" },
+      { name: "Reverse fly", sets: 3, target: "12 répétitions", note: "Buste incliné et stable, charge légère, focus sur les omoplates.", pictogram: "raise", image: "images/flat/dumbbell-reverse-fly-peak.webp" },
+      { name: "Ab wheel régressé", sets: 2, target: "6 répétitions", note: "Depuis les genoux, amplitude très courte et contrôlée. Arrête-toi bien avant toute tension abdominale — ce n'est pas un exercice à forcer.", pictogram: "core", image: "images/flat/ab-wheel-rollout-start.webp", caution: true },
+      { name: "Gainage doux", sets: 3, target: "20 secondes", note: "Dos droit, pas de creux ni de rond. Sors de la position à la moindre gêne au niveau de la cicatrice.", pictogram: "plank", image: "images/flat/plank-main.webp", caution: true },
+      { name: "Retour au calme", sets: 1, target: "60 secondes", note: "Respiration profonde, étirements doux.", pictogram: "stretch" },
     ],
   },
   B: {
     id: "B",
     label: "Séance B",
     focus: "Bras, poitrine, jambes arrière",
-    tagline: "Renforcer bras et poitrine, travailler ischios et fessiers.",
+    tagline: "Renforcer bras et poitrine, travailler les jambes.",
     exercises: [
-      { name: "Pompes inclinées", sets: 3, target: "10 répétitions", note: "Mains surélevées (table, canapé) pour limiter la charge sur le buste." },
-      { name: "Curl biceps", sets: 3, target: "12 répétitions", note: "Élastique ou haltères légers." },
-      { name: "Extension triceps", sets: 3, target: "12 répétitions", note: "Élastique, coudes fixes." },
-      { name: "Pont fessier", sets: 3, target: "15 répétitions", note: "Monte crescendo, souffle à la remontée, aucun à-coup." },
-      { name: "Fentes arrière", sets: 3, target: "10 par jambe", note: "Amplitude réduite si besoin, appui stable." },
-      { name: "Respiration et étirement", sets: 1, target: "60 secondes", note: "Termine en douceur, respiration profonde." },
+      { name: "Échauffement", sets: 1, target: "90 secondes", note: "Mobilité épaules, hanches et chevilles avant l'effort.", pictogram: "stretch" },
+      { name: "Dips assistés", sets: 3, target: "8 répétitions", note: "Assistance suffisante pour rester fluide, amplitude courte en cas de tension à l'épaule ou au buste.", pictogram: "push", image: "images/flat/assisted-dips-peak.webp" },
+      { name: "Pompes inclinées", sets: 3, target: "10 répétitions", note: "Mains surélevées (table, canapé), buste gainé sans cambrer.", pictogram: "push", image: "images/flat/incline-push-ups-peak.webp" },
+      { name: "Pompes diamant", sets: 3, target: "8 répétitions", note: "Version exigeante pour les triceps : réduis l'amplitude ou remonte les mains si besoin.", pictogram: "push", image: "images/flat/diamond-push-ups-peak.webp" },
+      { name: "Fentes bulgares", sets: 3, target: "10 par jambe", note: "Appui arrière stable, descente lente, sans à-coup.", pictogram: "squat", image: "images/flat/bulgarian-split-squat-peak.webp" },
+      { name: "Squats au poids du corps", sets: 3, target: "15 répétitions", note: "Descente contrôlée, talons au sol, genoux dans l'axe des pieds.", pictogram: "squat", image: "images/flat/bodyweight-squat-peak.webp" },
+      { name: "Retour au calme", sets: 1, target: "60 secondes", note: "Respiration profonde, étirements doux.", pictogram: "stretch" },
     ],
   },
 };
@@ -756,12 +836,31 @@ function SessionRunner({ workout, sessionProgress, onToggleSet, onAbandon, onOpe
           const setsDone = sessionProgress.progress[exIdx] || Array(ex.sets).fill(false);
           const complete = setsDone.every(Boolean);
           return (
-            <div key={exIdx} className="mb-3 rounded-xl p-4" style={{ background: COLORS.darkRaised, opacity: complete ? 0.6 : 1 }}>
-              <div className="flex items-center justify-between mb-2">
-                <p className={`${FONT_SANS} text-sm font-semibold`} style={{ color: COLORS.surface }}>{ex.name}</p>
-                <span className={`${FONT_MONO} text-xs`} style={{ color: "#9AA1AE" }}>{ex.target}</span>
+            <div
+              key={exIdx}
+              className="mb-3 rounded-xl p-4"
+              style={{
+                background: COLORS.darkRaised,
+                opacity: complete ? 0.6 : 1,
+                borderLeft: ex.caution ? `3px solid ${COLORS.signal}` : "3px solid transparent",
+              }}
+            >
+              <div className="flex gap-3 mb-3">
+                <ExerciseVisual exercise={ex} size={64} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className={`${FONT_SANS} text-sm font-semibold`} style={{ color: COLORS.surface }}>{ex.name}</p>
+                    <span className={`${FONT_MONO} text-xs flex-shrink-0 ml-2`} style={{ color: "#9AA1AE" }}>{ex.target}</span>
+                  </div>
+                  {ex.caution ? (
+                    <div className="flex items-center gap-1 mb-1">
+                      <AlertTriangle size={11} style={{ color: COLORS.signal }} />
+                      <span className={`${FONT_SANS} text-[11px] font-medium`} style={{ color: COLORS.signal }}>Vigilance abdominale</span>
+                    </div>
+                  ) : null}
+                  <p className={`${FONT_SANS} text-xs leading-relaxed`} style={{ color: "#9AA1AE" }}>{ex.note}</p>
+                </div>
               </div>
-              <p className={`${FONT_SANS} text-xs leading-relaxed mb-3`} style={{ color: "#9AA1AE" }}>{ex.note}</p>
               <div className="flex gap-2">
                 {setsDone.map((done, setIdx) => (
                   <button
@@ -1015,9 +1114,20 @@ function SettingsSheet({ open, onClose, onReset }) {
   useEffect(() => { if (!open) setConfirming(false); }, [open]);
   return (
     <BottomSheet open={open} onClose={onClose} title="Réglages">
-      <p className={`${FONT_SANS} text-sm mb-5`} style={{ color: COLORS.inkSoft }}>
+      <p className={`${FONT_SANS} text-sm mb-3`} style={{ color: COLORS.inkSoft }}>
         Carnet — suivi personnel sport, corps et esthétique. Toutes les données restent stockées localement.
       </p>
+      <a
+        href={REPDB_ATTRIBUTION_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`${FONT_SANS} cc-focus text-sm inline-flex items-center gap-1.5`}
+        style={{ color: COLORS.inkSoft }}
+      >
+        Illustrations d'exercices par RepDB (repdb.co)
+        <ExternalLink size={13} />
+      </a>
+      <div style={{ height: "1px", background: COLORS.line, margin: "4px 0 20px" }} />
       <button
         type="button"
         onClick={() => (confirming ? onReset() : setConfirming(true))}
